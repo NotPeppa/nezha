@@ -1,0 +1,9 @@
+services:
+  dashboard:
+    image: nz_image_url
+    container_name: nezha-dashboard
+    restart: always
+    volumes:
+      - ./data:/dashboard/data
+    ports:
+      - nz_port:nz_port
