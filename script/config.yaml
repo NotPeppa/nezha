@@ -1,28 +1,26 @@
 debug: false
-httpport: 80
+listen_port: nz_port
 language: nz_language
-grpcport: nz_grpc_port
+site_name: "nz_site_title"
+install_host: nz_hostport
+tls: nz_tls
 oauth2:
   # 每个 provider 为一个独立配置项，key 是 provider 名称（如 github、keycloak、authentik）
-  github:
-    client_id: "nz_github_oauth_client_id" # 在 https://github.com/settings/developers 创建，Callback: http(s)://域名或IP/oauth2/callback
-    client_secret: "nz_github_oauth_client_secret"
-    endpoint:
-      auth_url: "https://github.com/login/oauth/authorize"
-      token_url: "https://github.com/login/oauth/access_token"
-    scopes: ["read:user", "user:email"]
-    user_info_url: "https://api.github.com/user"
-    user_id_path: "id"
+  # github:
+  #   client_id: "nz_github_oauth_client_id" # 在 https://github.com/settings/developers 创建，Callback: http(s)://域名或IP/oauth2/callback
+  #   client_secret: "nz_github_oauth_client_secret"
+  #   endpoint:
+  #     auth_url: "https://github.com/login/oauth/authorize"
+  #     token_url: "https://github.com/login/oauth/access_token"
+  #   scopes: ["read:user", "user:email"]
+  #   user_info_url: "https://api.github.com/user"
+  #   user_id_path: "id"
 
   # 标准 OIDC 配置示例（支持 discovery、id_token 校验、nonce 校验）
-  oidc:
-    client_id: "nz_oidc_client_id"
-    client_secret: "nz_oidc_client_secret"
-    oidc_issuer: "https://idp.example.com/realms/main" # 发行者地址（不是 .well-known 完整路径）
-    # scopes 可按需补充，openid 会在 OIDC 模式下自动追加
-    scopes: ["profile", "email"]
-    oidc_user_id_claim: "sub" # 默认 sub，可改为 preferred_username 等
-site:
-  brand: "nz_site_title"
-  cookiename: "nezha-dashboard" #浏览器 Cookie 字段名，可不改
-  theme: "default"
+  # oidc:
+  #   client_id: "nz_oidc_client_id"
+  #   client_secret: "nz_oidc_client_secret"
+  #   oidc_issuer: "https://idp.example.com/realms/main" # 发行者地址（不是 .well-known 完整路径）
+  #   # scopes 可按需补充，openid 会在 OIDC 模式下自动追加
+  #   scopes: ["profile", "email"]
+  #   oidc_user_id_claim: "sub" # 默认 sub，可改为 preferred_username 等
