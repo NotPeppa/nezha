@@ -20,5 +20,6 @@ type Oauth2State struct {
 	Action      Oauth2LoginType
 	Provider    string
 	State       string
+	Nonce       string
 	RedirectURL string
 }

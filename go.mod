@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/VictoriaMetrics/VictoriaMetrics v1.134.0
 	github.com/appleboy/gin-jwt/v2 v2.10.3
+	github.com/coreos/go-oidc/v3 v3.16.1
 	github.com/dustinkirkland/golang-petname v0.0.0-20260215035315-f0c533e9ce9b
 	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-gonic/gin v1.12.0

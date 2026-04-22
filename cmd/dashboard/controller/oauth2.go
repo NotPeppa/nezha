@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
+	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
 	"github.com/tidwall/gjson"
@@ -58,14 +59,27 @@ func oauth2redirect(c *gin.Context) (*model.Oauth2LoginResponse, error) {
 		return nil, err
 	}
 	state, stateKey := randomString[:16], randomString[16:]
+	nonce := ""
+	if o2confRaw.IsOIDC() {
+		nonceRandomString, err := utils.GenerateRandomString(16)
+		if err != nil {
+			return nil, err
+		}
+		nonce = nonceRandomString
+	}
 	singleton.Cache.Set(fmt.Sprintf("%s%s", model.CacheKeyOauth2State, stateKey), &model.Oauth2State{
 		Action:      model.Oauth2LoginType(rTypeInt),
 		Provider:    provider,
 		State:       state,
+		Nonce:       nonce,
 		RedirectURL: redirectURL,
 	}, cache.DefaultExpiration)
 
-	url := o2conf.AuthCodeURL(state, oauth2.AccessTypeOnline)
+	oauth2Opts := []oauth2.AuthCodeOption{oauth2.AccessTypeOnline}
+	if nonce != "" {
+		oauth2Opts = append(oauth2Opts, oidc.Nonce(nonce))
+	}
+	url := o2conf.AuthCodeURL(state, oauth2Opts...)
 	// CodeQL go/cookie-secure-not-set: 根据请求协议动态设置 Secure 属性，避免 HTTP 环境下 Cookie 无法使用
 	c.SetCookie("nz-o2s", stateKey, 60*5, "", "", c.Request.URL.Scheme == "https" || c.Request.TLS != nil, false)
 
@@ -140,7 +154,12 @@ func oauth2callback(jwtConfig *jwt.GinJWTMiddleware) func(c *gin.Context) (any, 
 			return nil, singleton.Localizer.ErrorT("code is required")
 		}
 
-		openId, err := exchangeOpenId(c, o2confRaw, callbackData, state.RedirectURL)
+		var openId string
+		if o2confRaw.IsOIDC() {
+			openId, err = exchangeOIDCOpenID(c, o2confRaw, callbackData, state.RedirectURL, state.Nonce)
+		} else {
+			openId, err = exchangeOpenId(c, o2confRaw, callbackData, state.RedirectURL)
+		}
 		if err != nil {
 			model.BlockIP(singleton.DB, realip, model.WAFBlockReasonTypeBruteForceOauth2, model.BlockIDToken)
 			return nil, err

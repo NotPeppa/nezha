@@ -9,9 +9,15 @@ type Oauth2Config struct {
 	ClientSecret string         `koanf:"client_secret" json:"client_secret,omitempty"`
 	Endpoint     Oauth2Endpoint `koanf:"endpoint" json:"endpoint,omitempty"`
 	Scopes       []string       `koanf:"scopes" json:"scopes,omitempty"`
+	OIDCIssuer   string         `koanf:"oidc_issuer" json:"oidc_issuer,omitempty"`
+	OIDCUserID   string         `koanf:"oidc_user_id_claim" json:"oidc_user_id_claim,omitempty"`
 
 	UserInfoURL string `koanf:"user_info_url" json:"user_info_url,omitempty"`
 	UserIDPath  string `koanf:"user_id_path" json:"user_id_path,omitempty"`
+}
+
+func (c *Oauth2Config) IsOIDC() bool {
+	return c.OIDCIssuer != ""
 }
 
 type Oauth2Endpoint struct {
@@ -20,6 +26,20 @@ type Oauth2Endpoint struct {
 }
 
 func (c *Oauth2Config) Setup(redirectURL string) *oauth2.Config {
+	scopes := c.Scopes
+	if c.IsOIDC() {
+		hasOpenID := false
+		for _, scope := range scopes {
+			if scope == "openid" {
+				hasOpenID = true
+				break
+			}
+		}
+		if !hasOpenID {
+			scopes = append(scopes, "openid")
+		}
+	}
+
 	return &oauth2.Config{
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,
@@ -28,6 +48,6 @@ func (c *Oauth2Config) Setup(redirectURL string) *oauth2.Config {
 			TokenURL: c.Endpoint.TokenURL,
 		},
 		RedirectURL: redirectURL,
-		Scopes:      c.Scopes,
+		Scopes:      scopes,
 	}
 }
