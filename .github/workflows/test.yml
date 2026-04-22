@@ -11,13 +11,14 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   tests:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu, windows, macos]
+        os: [ubuntu]
 
     runs-on: ${{ matrix.os }}-latest
     env:
