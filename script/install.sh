@@ -600,7 +600,7 @@ show_usage() {
 
 show_menu() {
     println "${green}哪吒监控管理脚本${plain}"
-    echo "--- https://github.com/nezhahq/nezha ---"
+    echo "--- https://github.com/NotPeppa/nezha ---"
     println "${green}1.${plain}  安装面板端"
     println "${green}2.${plain}  修改面板配置"
     println "${green}3.${plain}  重启并更新面板"
