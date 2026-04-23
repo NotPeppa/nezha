@@ -20,6 +20,7 @@ func exchangeOIDCOpenID(c context.Context, conf *model.Oauth2Config, callbackDat
 	}
 
 	o2conf := conf.Setup(redirectURL)
+	o2conf.Endpoint = provider.Endpoint()
 	otk, err := o2conf.Exchange(c, callbackData.Code)
 	if err != nil {
 		return "", err

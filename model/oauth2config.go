@@ -1,6 +1,9 @@
 package model
 
 import (
+	"context"
+
+	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 )
 
@@ -25,19 +28,19 @@ type Oauth2Endpoint struct {
 	TokenURL string `koanf:"token_url" json:"token_url,omitempty"`
 }
 
+func (c *Oauth2Config) ensureOpenIDScope(scopes []string) []string {
+	for _, s := range scopes {
+		if s == "openid" {
+			return scopes
+		}
+	}
+	return append(scopes, "openid")
+}
+
 func (c *Oauth2Config) Setup(redirectURL string) *oauth2.Config {
 	scopes := c.Scopes
 	if c.IsOIDC() {
-		hasOpenID := false
-		for _, scope := range scopes {
-			if scope == "openid" {
-				hasOpenID = true
-				break
-			}
-		}
-		if !hasOpenID {
-			scopes = append(scopes, "openid")
-		}
+		scopes = c.ensureOpenIDScope(scopes)
 	}
 
 	return &oauth2.Config{
@@ -50,4 +53,25 @@ func (c *Oauth2Config) Setup(redirectURL string) *oauth2.Config {
 		RedirectURL: redirectURL,
 		Scopes:      scopes,
 	}
+}
+
+// SetupWithContext 在 OIDC 模式下通过 oidc_issuer 自动 discovery 获取 endpoint，
+// 非 OIDC 模式等同于 Setup。
+func (c *Oauth2Config) SetupWithContext(ctx context.Context, redirectURL string) (*oauth2.Config, error) {
+	if !c.IsOIDC() {
+		return c.Setup(redirectURL), nil
+	}
+
+	provider, err := oidc.NewProvider(ctx, c.OIDCIssuer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oauth2.Config{
+		ClientID:     c.ClientID,
+		ClientSecret: c.ClientSecret,
+		Endpoint:     provider.Endpoint(),
+		RedirectURL:  redirectURL,
+		Scopes:       c.ensureOpenIDScope(c.Scopes),
+	}, nil
 }

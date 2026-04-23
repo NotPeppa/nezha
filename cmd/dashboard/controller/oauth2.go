@@ -52,7 +52,10 @@ func oauth2redirect(c *gin.Context) (*model.Oauth2LoginResponse, error) {
 		return nil, singleton.Localizer.ErrorT("provider not found")
 	}
 	redirectURL := getRedirectURL(c)
-	o2conf := o2confRaw.Setup(redirectURL)
+	o2conf, err := o2confRaw.SetupWithContext(c, redirectURL)
+	if err != nil {
+		return nil, err
+	}
 
 	randomString, err := utils.GenerateRandomString(32)
 	if err != nil {
